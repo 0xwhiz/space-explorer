@@ -1,38 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, Calendar, Zap } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { API_ENDPOINTS } from '@/config/api';
 import { DateInput } from '@/components/ui/date-input';
-
-interface MarsPhoto {
-  id: number;
-  img_src: string;
-  earth_date: string;
-  rover: {
-    name: string;
-    status: string;
-  };
-  camera: {
-    name: string;
-    full_name: string;
-  };
-}
-
-interface MarsApiResponse {
-  photos: MarsPhoto[];
-}
+import { useSpaceData } from '@/components/SpaceDataContext';
+import React from 'react';
 
 export const MarsRoverGallery = () => {
-  const [photos, setPhotos] = useState<MarsPhoto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { marsPhotos, marsLoading, marsError, fetchMarsPhotos } = useSpaceData();
   const [selectedRover, setSelectedRover] = useState('curiosity');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date('2023-01-01'));
-  const { toast } = useToast();
 
   const rovers = [
     { value: 'curiosity', label: 'Curiosity' },
@@ -41,36 +21,10 @@ export const MarsRoverGallery = () => {
     { value: 'perseverance', label: 'Perseverance' }
   ];
 
-  const fetchMarsPhotos = async (rover: string, date: Date | null) => {
-    setLoading(true);
-    try {
-      if (!date) return;
-      
-      const dateStr = date.toISOString().split('T')[0];
-      const response = await fetch(
-        `${API_ENDPOINTS.MARS_PHOTOS}?rover=${rover}&date=${dateStr}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch Mars rover photos');
-      }
-      
-      const data: MarsApiResponse = await response.json();
-      setPhotos(data.photos);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load Mars rover photos. Please try again.",
-        variant: "destructive"
-      });
-      setPhotos([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
+  // Fetch on mount and when rover/date changes
+  React.useEffect(() => {
     fetchMarsPhotos(selectedRover, selectedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRover, selectedDate]);
 
   const handleRoverChange = (rover: string) => {
@@ -124,7 +78,7 @@ export const MarsRoverGallery = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-primary">
-              {loading ? <Skeleton className="h-8 w-12 mx-auto" /> : photos.length}
+              {marsLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : marsPhotos.length}
             </div>
             <div className="text-sm text-muted-foreground">Photos Found</div>
           </CardContent>
@@ -132,7 +86,7 @@ export const MarsRoverGallery = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-secondary">
-              {loading ? <Skeleton className="h-8 w-20 mx-auto" /> : (photos[0]?.rover.name || selectedRover)}
+              {marsLoading ? <Skeleton className="h-8 w-20 mx-auto" /> : (marsPhotos[0]?.rover.name || selectedRover)}
             </div>
             <div className="text-sm text-muted-foreground">Active Rover</div>
           </CardContent>
@@ -140,14 +94,14 @@ export const MarsRoverGallery = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-accent">
-              {loading ? <Skeleton className="h-8 w-8 mx-auto" /> : new Set(photos.map(p => p.camera.name)).size}
+              {marsLoading ? <Skeleton className="h-8 w-8 mx-auto" /> : new Set(marsPhotos.map(p => p.camera.name)).size}
             </div>
             <div className="text-sm text-muted-foreground">Camera Types</div>
           </CardContent>
         </Card>
       </div>
       {/* Photos Grid */}
-      {loading ? (
+      {marsLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="bg-card/50 backdrop-blur-sm border-border/50">
@@ -159,7 +113,7 @@ export const MarsRoverGallery = () => {
             </Card>
           ))}
         </div>
-      ) : photos.length === 0 ? (
+      ) : marsPhotos.length === 0 ? (
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-8 text-center">
             <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -171,15 +125,16 @@ export const MarsRoverGallery = () => {
             <Button 
               variant="outline" 
               className="mt-4"
-              onClick={() => setSelectedDate(new Date('2023-01-01'))}
+              onClick={() => fetchMarsPhotos(selectedRover, selectedDate)}
             >
-              Reset to Default Date
+              Retry
             </Button>
+            {marsError && <div className="text-destructive mt-2">{marsError}</div>}
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {photos.map((photo) => (
+          {marsPhotos.map((photo) => (
             <Card 
               key={photo.id} 
               className="group bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden hover:shadow-cosmic transition-all duration-300 cursor-pointer"

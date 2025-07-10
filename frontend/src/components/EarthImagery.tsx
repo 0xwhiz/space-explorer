@@ -1,88 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Globe, Calendar, Download, Maximize2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { API_ENDPOINTS } from '@/config/api';
 import { DateInput } from '@/components/ui/date-input';
-
-interface EPICImage {
-  identifier: string;
-  caption: string;
-  image: string;
-  version: string;
-  centroid_coordinates: {
-    lat: number;
-    lon: number;
-  };
-  dscovr_j2000_position: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  lunar_j2000_position: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  sun_j2000_position: {
-    x: number;
-    y: number;
-    z: number;
-  };
-  attitude_quaternions: {
-    q0: number;
-    q1: number;
-    q2: number;
-    q3: number;
-  };
-  date: string;
-  coords: {
-    centroid_coordinates: {
-      lat: number;
-      lon: number;
-    };
-  };
-}
+import { useSpaceData } from '@/components/SpaceDataContext';
+import React from 'react';
 
 export const EarthImagery = () => {
-  const [images, setImages] = useState<EPICImage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { epicImages, epicLoading, epicError, fetchEPICImages } = useSpaceData();
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date('2023-06-01'));
   const [imageType, setImageType] = useState<'natural' | 'enhanced'>('natural');
   const [selectedIdx, setSelectedIdx] = useState(0);
-  const { toast } = useToast();
 
-  const fetchEPICImages = async (date: Date | null, type: 'natural' | 'enhanced') => {
-    setLoading(true);
-    try {
-      if (!date) return;
-      
-      const dateStr = date.toISOString().split('T')[0];
-      const response = await fetch(
-        `${API_ENDPOINTS.EPIC}?date=${dateStr}&type=${type}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch EPIC images');
-      const data: EPICImage[] = await response.json();
-      setImages(data);
-      setSelectedIdx(0);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load Earth imagery. Please try a different date.",
-        variant: "destructive"
-      });
-      setImages([]);
-      setSelectedIdx(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
+  // Fetch on mount and when date/type changes
+  React.useEffect(() => {
     fetchEPICImages(selectedDate, imageType);
+    setSelectedIdx(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, imageType]);
 
   const handleDateChange = (date: Date | null) => {
@@ -93,17 +29,16 @@ export const EarthImagery = () => {
     setImageType(type);
   };
 
-  const getImageUrl = (image: EPICImage, size: 'png' | 'thumbs' = 'png') => {
+  const getImageUrl = (image: any, size: 'png' | 'thumbs' = 'png') => {
     const dateStr = image.date.split(' ')[0].replace(/-/g, '/');
-    
     return `https://api.nasa.gov/EPIC/archive/${imageType}/${dateStr}/png/${image.image}.png?api_key=1fhWh7ecPgJHANiHx096bURDZXDaOx1wX1Yux8UU`;
   };
 
-  const selectedImage = images[selectedIdx];
+  const selectedImage = epicImages[selectedIdx];
 
   // Carousel navigation
-  const prevImage = () => setSelectedIdx((idx) => (idx > 0 ? idx - 1 : images.length - 1));
-  const nextImage = () => setSelectedIdx((idx) => (idx < images.length - 1 ? idx + 1 : 0));
+  const prevImage = () => setSelectedIdx((idx) => (idx > 0 ? idx - 1 : epicImages.length - 1));
+  const nextImage = () => setSelectedIdx((idx) => (idx < epicImages.length - 1 ? idx + 1 : 0));
 
   // Format helpers
   const formatLatLon = (lat: number, lon: number) => `${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E`;
@@ -113,7 +48,7 @@ export const EarthImagery = () => {
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  if (loading) {
+  if (epicLoading) {
     return (
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
@@ -174,17 +109,29 @@ export const EarthImagery = () => {
                 </CardContent>
               </Card>
             </div>
-            <Card className="bg-card/80 border-none mb-4">
-              <CardContent className="flex flex-col items-start p-4">
-                <span className="text-xs text-muted-foreground mb-1">DSCOVR Satellite Position</span>
-                <div className="flex gap-6 text-white">
-                  <div><span className="font-bold">X:</span> -</div>
-                  <div><span className="font-bold">Y:</span> -</div>
-                  <div><span className="font-bold">Z:</span> -</div>
-                </div>
-                <span className="text-xs text-muted-foreground mt-1">Position relative to Earth-Sun L1 Lagrange point in J2000 coordinates</span>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <Card className="bg-card/80 border-none">
+                <CardContent className="flex flex-col items-start p-4">
+                  <span className="text-xs text-muted-foreground">Satellite X</span>
+                  <Skeleton className="h-6 w-16 mt-1" />
+                </CardContent>
+              </Card>
+              <Card className="bg-card/80 border-none">
+                <CardContent className="flex flex-col items-start p-4">
+                  <span className="text-xs text-muted-foreground">Satellite Y</span>
+                  <Skeleton className="h-6 w-16 mt-1" />
+                </CardContent>
+              </Card>
+              <Card className="bg-card/80 border-none">
+                <CardContent className="flex flex-col items-start p-4">
+                  <span className="text-xs text-muted-foreground">Satellite Z</span>
+                  <Skeleton className="h-6 w-16 mt-1" />
+                </CardContent>
+              </Card>
+            </div>
+            <div className="text-xs text-muted-foreground mb-4">
+              Position relative to Earth-Sun L1 Lagrange point in J2000 coordinates
+            </div>
             {/* Thumbnails */}
             <div className="flex gap-2 overflow-x-auto pb-2">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -232,9 +179,7 @@ export const EarthImagery = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left: Image Carousel */}
         <Card className="bg-black rounded-2xl shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
-          {loading ? (
-            <Skeleton className="h-[400px] w-full" />
-          ) : images.length > 0 ? (
+          {epicImages.length > 0 ? (
             <>
               <img
                 src={getImageUrl(selectedImage)}
@@ -260,13 +205,17 @@ export const EarthImagery = () => {
                 <ChevronRight className="w-6 h-6" />
               </Button>
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-white text-sm bg-black/60 rounded-full px-3 py-1">
-                {selectedIdx + 1} / {images.length}
+                {selectedIdx + 1} / {epicImages.length}
               </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-[400px] w-full text-muted-foreground">
               <Globe className="w-12 h-12 mb-4" />
               <span>No images found for this date.</span>
+              <Button onClick={() => fetchEPICImages(selectedDate, imageType)} className="mt-4">
+                Retry
+              </Button>
+              {epicError && <div className="text-destructive mt-2">{epicError}</div>}
             </div>
           )}
         </Card>
@@ -295,42 +244,54 @@ export const EarthImagery = () => {
               </CardContent>
             </Card>
           </div>
-          <Card className="bg-card/80 border-none mb-4">
-            <CardContent className="flex flex-col items-start p-4">
-              <span className="text-xs text-muted-foreground mb-1">DSCOVR Satellite Position</span>
-              <div className="flex gap-6 text-white">
-                <div><span className="font-bold">X:</span> {selectedImage ? formatKm(selectedImage.dscovr_j2000_position.x) : '-'}</div>
-                <div><span className="font-bold">Y:</span> {selectedImage ? formatKm(selectedImage.dscovr_j2000_position.y) : '-'}</div>
-                <div><span className="font-bold">Z:</span> {selectedImage ? formatKm(selectedImage.dscovr_j2000_position.z) : '-'}</div>
-              </div>
-              <span className="text-xs text-muted-foreground mt-1">Position relative to Earth-Sun L1 Lagrange point in J2000 coordinates</span>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <Card className="bg-card/80 border-none">
+              <CardContent className="flex flex-col items-start p-4">
+                <span className="text-xs text-muted-foreground">Satellite X</span>
+                <span className="text-lg font-semibold text-white mt-1">
+                  {selectedImage ? formatKm(selectedImage.dscovr_j2000_position.x) : '-'}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/80 border-none">
+              <CardContent className="flex flex-col items-start p-4">
+                <span className="text-xs text-muted-foreground">Satellite Y</span>
+                <span className="text-lg font-semibold text-white mt-1">
+                  {selectedImage ? formatKm(selectedImage.dscovr_j2000_position.y) : '-'}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/80 border-none">
+              <CardContent className="flex flex-col items-start p-4">
+                <span className="text-xs text-muted-foreground">Satellite Z</span>
+                <span className="text-lg font-semibold text-white mt-1">
+                  {selectedImage ? formatKm(selectedImage.dscovr_j2000_position.z) : '-'}
+                </span>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="text-xs text-muted-foreground mb-4">
+            Position relative to Earth-Sun L1 Lagrange point in J2000 coordinates
+          </div>
           {/* Thumbnails */}
           <div className="flex gap-2 overflow-x-auto pb-2 earth-thumbnails-scrollbar">
-            {loading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="rounded-lg h-14 w-14" />
-              ))
-            ) : (
-              images.map((img, idx) => (
-                <button
-                  key={img.identifier}
-                  className={`rounded-lg border-2 ${idx === selectedIdx ? 'border-blue-400' : 'border-transparent'} focus:outline-none`}
-                  style={{ minWidth: 56, minHeight: 56 }}
-                  onClick={() => setSelectedIdx(idx)}
-                >
-                  <img
-                    src={getImageUrl(img, 'thumbs')}
-                    alt={img.caption}
-                    className="rounded-lg object-cover h-14 w-14"
-                  />
-                </button>
-              ))
-            )}
+            {epicImages.map((img, idx) => (
+              <button
+                key={img.identifier}
+                className={`rounded-lg border-2 ${idx === selectedIdx ? 'border-blue-400' : 'border-transparent'} focus:outline-none`}
+                style={{ minWidth: 56, minHeight: 56 }}
+                onClick={() => setSelectedIdx(idx)}
+              >
+                <img
+                  src={getImageUrl(img, 'thumbs')}
+                  alt={img.caption}
+                  className="rounded-lg object-cover h-14 w-14"
+                />
+              </button>
+            ))}
           </div>
         </div>
       </div>
     </div>
   );
-}
+};

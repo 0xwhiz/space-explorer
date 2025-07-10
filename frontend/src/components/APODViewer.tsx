@@ -3,53 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, Share2, Heart, ExternalLink } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { API_ENDPOINTS } from '@/config/api';
 import { DateInput } from '@/components/ui/date-input';
-
-interface APODData {
-  date: string;
-  explanation: string;
-  hdurl?: string;
-  media_type: string;
-  service_version: string;
-  title: string;
-  url: string;
-}
+import { useSpaceData } from '@/components/SpaceDataContext';
 
 export const APODViewer = () => { 
-  const [apodData, setApodData] = useState<APODData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { apodData, apodLoading, apodError, fetchAPOD } = useSpaceData();
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const { toast } = useToast();
-
-  const fetchAPOD = async (date?: Date) => {
-    setLoading(true);
-    try {
-      // Use backend endpoint instead of NASA API directly
-      const dateParam = date ? `?date=${date.toISOString().split('T')[0]}` : '';
-      const response = await fetch(`${API_ENDPOINTS.APOD}${dateParam}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch APOD data');
-      }
-      
-      const data = await response.json();
-      setApodData(data);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load Astronomy Picture of the Day. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchAPOD();
-  }, []);
+    if (selectedDate) {
+      fetchAPOD(selectedDate);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
@@ -58,7 +24,7 @@ export const APODViewer = () => {
     }
   };
 
-  if (loading) {
+  if (apodLoading) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header Controls (always visible) */}
@@ -123,7 +89,6 @@ export const APODViewer = () => {
     );
   }
 
-  // Always show header, even on error
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header Controls */}
@@ -237,8 +202,10 @@ export const APODViewer = () => {
       ) : (
         <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden">
           <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">Failed to load Astronomy Picture of the Day</p>
-            <Button onClick={() => fetchAPOD()} className="mt-4">
+            <p className="text-muted-foreground">
+              {apodError || 'Failed to load Astronomy Picture of the Day'}
+            </p>
+            <Button onClick={() => fetchAPOD(selectedDate || undefined)} className="mt-4">
               Try Again
             </Button>
           </CardContent>

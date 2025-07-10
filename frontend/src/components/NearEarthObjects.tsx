@@ -5,99 +5,32 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, Calendar, Ruler, Zap, ExternalLink, Target } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { API_ENDPOINTS } from '@/config/api';
 import { DateInput } from '@/components/ui/date-input';
-
-interface NearEarthObject {
-  id: string;
-  name: string;
-  nasa_jpl_url: string;
-  absolute_magnitude_h: number;
-  estimated_diameter: {
-    kilometers: {
-      estimated_diameter_min: number;
-      estimated_diameter_max: number;
-    };
-  };
-  is_potentially_hazardous_asteroid: boolean;
-  close_approach_data: Array<{
-    close_approach_date: string;
-    close_approach_date_full: string;
-    epoch_date_close_approach: number;
-    relative_velocity: {
-      kilometers_per_second: string;
-      kilometers_per_hour: string;
-    };
-    miss_distance: {
-      astronomical: string;
-      kilometers: string;
-    };
-    orbiting_body: string;
-  }>;
-}
-
-interface NEOApiResponse {
-  near_earth_objects: {
-    [date: string]: NearEarthObject[];
-  };
-  element_count: number;
-}
+import { useSpaceData } from '@/components/SpaceDataContext';
 
 export const NearEarthObjects = () => {
-  const [neoData, setNeoData] = useState<NEOApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { neoData, neoLoading, neoError, fetchNEOs } = useSpaceData();
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const { toast } = useToast();
-
-  const fetchNEOs = async (startDate: Date | null) => {
-    setLoading(true);
-    try {
-      if (!startDate) return;
-      
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 6); // Get a week's worth of data
-      const endDateStr = endDate.toISOString().split('T')[0];
-      const startDateStr = startDate.toISOString().split('T')[0];
-      
-      // Use backend endpoint instead of NASA API directly
-      const response = await fetch(
-        `${API_ENDPOINTS.NEOWS}?start_date=${startDateStr}&end_date=${endDateStr}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch Near Earth Objects data');
-      }
-      
-      const data: NEOApiResponse = await response.json();
-      setNeoData(data);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load Near Earth Objects data. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchNEOs(selectedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
   };
 
-  const getAllNEOs = (): NearEarthObject[] => {
+  const getAllNEOs = () => {
     if (!neoData) return [];
     return Object.values(neoData.near_earth_objects).flat();
   };
 
-  const getHazardousNEOs = (): NearEarthObject[] => {
+  const getHazardousNEOs = () => {
     return getAllNEOs().filter(neo => neo.is_potentially_hazardous_asteroid);
   };
+
+  const todaysNEOs = neoData?.near_earth_objects[selectedDate?.toISOString().split('T')[0] || ''] || [];
 
   const formatDistance = (km: string): string => {
     const distance = parseFloat(km);
@@ -107,16 +40,11 @@ export const NearEarthObjects = () => {
     return `${distance.toLocaleString()} km`;
   };
 
-  const formatDiameter = (neo: NearEarthObject): string => {
+  const formatDiameter = (neo: any): string => {
     const min = neo.estimated_diameter.kilometers.estimated_diameter_min;
     const max = neo.estimated_diameter.kilometers.estimated_diameter_max;
     return `${min.toFixed(2)} - ${max.toFixed(2)} km`;
   };
-
-  // Always define these before return so they're in scope for all render paths
-  const allNEOs = getAllNEOs();
-  const hazardousNEOs = getHazardousNEOs();
-  const todaysNEOs = neoData?.near_earth_objects[selectedDate?.toISOString().split('T')[0] || ''] || [];
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -147,7 +75,7 @@ export const NearEarthObjects = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-primary">
-              {loading ? <Skeleton className="h-8 w-12 mx-auto" /> : (neoData?.element_count || 0)}
+              {neoLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : (neoData?.element_count || 0)}
             </div>
             <div className="text-sm text-muted-foreground">Total Objects</div>
           </CardContent>
@@ -155,7 +83,7 @@ export const NearEarthObjects = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-destructive">
-              {loading ? <Skeleton className="h-8 w-12 mx-auto" /> : hazardousNEOs.length}
+              {neoLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : getHazardousNEOs().length}
             </div>
             <div className="text-sm text-muted-foreground">Potentially Hazardous</div>
           </CardContent>
@@ -163,7 +91,7 @@ export const NearEarthObjects = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-secondary">
-              {loading ? <Skeleton className="h-8 w-12 mx-auto" /> : todaysNEOs.length}
+              {neoLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : todaysNEOs.length}
             </div>
             <div className="text-sm text-muted-foreground">Today's Approaches</div>
           </CardContent>
@@ -171,7 +99,7 @@ export const NearEarthObjects = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-accent">
-              {loading ? <Skeleton className="h-8 w-16 mx-auto" /> : (() => {
+              {neoLoading ? <Skeleton className="h-8 w-16 mx-auto" /> : (() => {
                 if (!neoData) return 'N/A';
                 const allNEOs = getAllNEOs();
                 if (!allNEOs.length) return 'N/A';
@@ -194,7 +122,7 @@ export const NearEarthObjects = () => {
       </div>
 
       {/* NEO Data Tabs/Grid */}
-      {loading ? (
+      {neoLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="bg-card/50 backdrop-blur-sm border-border/50">
@@ -209,16 +137,16 @@ export const NearEarthObjects = () => {
             </Card>
           ))}
         </div>
-      ) : (
+      ) : neoData ? (
         <Tabs defaultValue="all" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
-              All Objects ({allNEOs.length})
+              All Objects ({getAllNEOs().length})
             </TabsTrigger>
             <TabsTrigger value="hazardous" className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
-              Hazardous ({hazardousNEOs.length})
+              Hazardous ({getHazardousNEOs().length})
             </TabsTrigger>
             <TabsTrigger value="today" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -227,24 +155,33 @@ export const NearEarthObjects = () => {
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
-            <NEOGrid neos={allNEOs.slice(0, 12)} />
+            <NEOGrid neos={getAllNEOs().slice(0, 12)} />
           </TabsContent>
 
           <TabsContent value="hazardous" className="space-y-4">
-            <NEOGrid neos={hazardousNEOs} />
+            <NEOGrid neos={getHazardousNEOs()} />
           </TabsContent>
 
           <TabsContent value="today" className="space-y-4">
             <NEOGrid neos={todaysNEOs} />
           </TabsContent>
         </Tabs>
+      ) : (
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground">{neoError || 'Failed to load Near Earth Objects data.'}</p>
+            <Button onClick={() => fetchNEOs(selectedDate)} className="mt-4">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
 };
 
 interface NEOGridProps {
-  neos: NearEarthObject[];
+  neos: any[]; // Changed to any[] as NearEarthObject type is removed
 }
 
 const NEOGrid: React.FC<NEOGridProps> = ({ neos }) => {
@@ -256,7 +193,7 @@ const NEOGrid: React.FC<NEOGridProps> = ({ neos }) => {
     return `${distance.toLocaleString()} km`;
   };
 
-  const formatDiameter = (neo: NearEarthObject): string => {
+  const formatDiameter = (neo: any): string => { // Changed to any as NearEarthObject type is removed
     const min = neo.estimated_diameter.kilometers.estimated_diameter_min;
     const max = neo.estimated_diameter.kilometers.estimated_diameter_max;
     return `${min.toFixed(2)} - ${max.toFixed(2)} km`;
