@@ -16,7 +16,7 @@ app.use('/api/epic', epicRoute);
 app.use('/api/neows', neowsRoute);
 app.use('/api/image-search', imageLibraryRoute);
 
-app.get("/", (req, res) => res.send("Space explorere server is Running"));
+app.get("/", (req, res) => res.send("Space explorer server is Running"));
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 

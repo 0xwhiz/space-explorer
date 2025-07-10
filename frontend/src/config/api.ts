@@ -1,5 +1,5 @@
 // export const BASE_API_URL = 'http://localhost:5000';
-export const BASE_API_URL = 'http://135.181.219.177:5000';
+export const BASE_API_URL = 'https://space-explorer-blt8.vercel.app';
 
 export const API_ENDPOINTS = {
   APOD: `${BASE_API_URL}/api/apod`,
