@@ -84,7 +84,7 @@ export const MarsRoverGallery = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header Controls */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50 relative z-10">
         <CardHeader>
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <div>

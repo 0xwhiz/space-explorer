@@ -62,7 +62,7 @@ export const APODViewer = () => {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header Controls (always visible) */}
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 relative z-10">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
@@ -126,7 +126,7 @@ export const APODViewer = () => {
   if (!apodData) {
     return (
       <div className="max-w-4xl mx-auto text-center">
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 relative z-10">
           <CardContent className="p-8">
             <p className="text-muted-foreground">Failed to load Astronomy Picture of the Day</p>
             <Button onClick={() => fetchAPOD()} className="mt-4">
@@ -141,7 +141,7 @@ export const APODViewer = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header Controls */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50 relative z-10">
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div>
