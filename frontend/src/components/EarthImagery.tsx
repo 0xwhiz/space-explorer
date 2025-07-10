@@ -31,7 +31,8 @@ export const EarthImagery = () => {
 
   const getImageUrl = (image: any, size: 'png' | 'thumbs' = 'png') => {
     const dateStr = image.date.split(' ')[0].replace(/-/g, '/');
-    return `https://api.nasa.gov/EPIC/archive/${imageType}/${dateStr}/png/${image.image}.png?api_key=1fhWh7ecPgJHANiHx096bURDZXDaOx1wX1Yux8UU`;
+    const apiKey = import.meta.env.VITE_NASA_API_KEY || '1fhWh7ecPgJHANiHx096bURDZXDaOx1wX1Yux8UU';
+    return `https://api.nasa.gov/EPIC/archive/${imageType}/${dateStr}/png/${image.image}.png?api_key=${apiKey}`;
   };
 
   const selectedImage = epicImages[selectedIdx];
