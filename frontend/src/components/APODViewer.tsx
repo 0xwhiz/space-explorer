@@ -123,21 +123,7 @@ export const APODViewer = () => {
     );
   }
 
-  if (!apodData) {
-    return (
-      <div className="max-w-4xl mx-auto text-center">
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50 relative z-10">
-          <CardContent className="p-8">
-            <p className="text-muted-foreground">Failed to load Astronomy Picture of the Day</p>
-            <Button onClick={() => fetchAPOD()} className="mt-4">
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
+  // Always show header, even on error
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header Controls */}
@@ -165,92 +151,99 @@ export const APODViewer = () => {
       </Card>
 
       {/* Main Content */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <CardTitle className="text-xl font-orbitron text-primary mb-2">
-                {apodData.title}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                {new Date(apodData.date).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            </div>
-            <Button variant="ghost" size="sm">
-              <Heart className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="p-0">
-          {/* Media Display */}
-          <div className="relative">
-            {apodData.media_type === 'image' ? (
-              <div className="group relative">
-                <img
-                  src={apodData.url}
-                  alt={apodData.title}
-                  className="w-full h-auto max-h-[600px] object-cover"
-                  loading="lazy"
-                />
-                {apodData.hdurl && (
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <Button
-                      variant="secondary"
-                      onClick={() => window.open(apodData.hdurl, '_blank')}
-                      className="bg-background/90 backdrop-blur-sm"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      View HD Version
-                    </Button>
-                  </div>
-                )}
+      {apodData ? (
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle className="text-xl font-orbitron text-primary mb-2">
+                  {apodData.title}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {new Date(apodData.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
               </div>
-            ) : (
-              <div className="aspect-video">
-                <iframe
-                  src={apodData.url}
-                  title={apodData.title}
-                  className="w-full h-full"
-                  allowFullScreen
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="p-6">
-            <div className="prose prose-invert max-w-none">
-              <p className="text-foreground leading-relaxed">
-                {apodData.explanation}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/50">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>NASA APOD</span>
-                <span>•</span>
-                <span>Image Credit: NASA</span>
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(apodData.url, '_blank')}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Original
+              <Button variant="ghost" size="sm">
+                <Heart className="w-4 h-4" />
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="p-0">
+            {/* Media Display */}
+            <div className="relative">
+              {apodData.media_type === 'image' ? (
+                <div className="group relative">
+                  <img
+                    src={apodData.url}
+                    alt={apodData.title}
+                    className="w-full h-auto max-h-[600px] object-cover"
+                    loading="lazy"
+                  />
+                  {apodData.hdurl && (
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <Button
+                        variant="secondary"
+                        onClick={() => window.open(apodData.hdurl, '_blank')}
+                        className="bg-background/90 backdrop-blur-sm"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View HD Version
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="aspect-video">
+                  <iframe
+                    src={apodData.url}
+                    title={apodData.title}
+                    className="w-full h-full"
+                    allowFullScreen
+                  />
+                </div>
+              )}
+            </div>
+            {/* Description */}
+            <div className="p-6">
+              <div className="prose prose-invert max-w-none">
+                <p className="text-foreground leading-relaxed">
+                  {apodData.explanation}
+                </p>
+              </div>
+              <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/50">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>NASA APOD</span>
+                  <span>•</span>
+                  <span>Image Credit: NASA</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(apodData.url, '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Original
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden">
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground">Failed to load Astronomy Picture of the Day</p>
+            <Button onClick={() => fetchAPOD()} className="mt-4">
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
