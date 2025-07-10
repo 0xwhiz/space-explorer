@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Space Explorers Hub - Cosmic Design System */
+
+@layer base {
+  :root {
+    /* Cosmic Background - Deep space blues and blacks */
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+
+    /* Cards - Nebula-inspired gradients */
+    --card: 224 71% 8%;
+    --card-foreground: 210 40% 98%;
+
+    /* Interactive Elements */
+    --popover: 224 71% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary - Cosmic Blue */
+    --primary: 217 91% 60%;
+    --primary-foreground: 224 71% 4%;
+    --primary-glow: 217 91% 75%;
+
+    /* Secondary - Aurora Purple */
+    --secondary: 271 91% 65%;
+    --secondary-foreground: 224 71% 4%;
+
+    /* Muted - Starfield Gray */
+    --muted: 224 71% 12%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Accent - Stellar Gold */
+    --accent: 43 96% 56%;
+    --accent-foreground: 224 71% 4%;
+
+    /* Destructive - Solar Red */
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Borders and inputs */
+    --border: 224 71% 16%;
+    --input: 224 71% 16%;
+    --ring: 217 91% 60%;
+
+    /* Cosmic Gradients */
+    --gradient-cosmic: linear-gradient(135deg, hsl(217 91% 60%), hsl(271 91% 65%));
+    --gradient-nebula: linear-gradient(180deg, hsl(224 71% 8%), hsl(224 71% 4%));
+    --gradient-aurora: linear-gradient(45deg, hsl(271 91% 65%), hsl(217 91% 60%), hsl(43 96% 56%));
+    
+    /* Shadows */
+    --shadow-cosmic: 0 25px 50px -12px hsl(217 91% 60% / 0.25);
+    --shadow-glow: 0 0 40px hsl(217 91% 60% / 0.4);
+    
+    /* Animations */
+    --transition-cosmic: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Enhanced dark mode for space theme */
+    --background: 224 71% 2%;
+    --card: 224 71% 6%;
+    --muted: 224 71% 10%;
+    --border: 224 71% 14%;
+    --input: 224 71% 14%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
