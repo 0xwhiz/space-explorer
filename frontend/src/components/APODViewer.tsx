@@ -120,22 +120,18 @@ export const APODViewer = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden">
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <CardTitle className="text-xl font-orbitron text-primary mb-2">
-                  {apodData.title}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  {new Date(apodData.date).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-              <Button variant="ghost" size="sm">
-                <Heart className="w-4 h-4" />
+              {/* Top left: Picture label */}
+              <CardTitle className="text-xl font-orbitron text-primary mb-2">
+                {apodData.title}
+              </CardTitle>
+              {/* Top right: View Original button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(apodData.url, '_blank')}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Original
               </Button>
             </div>
           </CardHeader>
@@ -155,7 +151,7 @@ export const APODViewer = () => {
                       <Button
                         variant="secondary"
                         onClick={() => window.open(apodData.hdurl, '_blank')}
-                        className="bg-background/90 backdrop-blur-sm"
+                        className="bg-background/90 backdrop-blur-sm text-white/50"
                       >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         View HD Version
@@ -181,20 +177,16 @@ export const APODViewer = () => {
                   {apodData.explanation}
                 </p>
               </div>
+              {/* Footer: bottom left and bottom right labels */}
               <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/50">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>NASA APOD</span>
-                  <span>•</span>
-                  <span>Image Credit: NASA</span>
+                {/* Bottom left: NASA APOD */}
+                <div className="text-sm text-muted-foreground">
+                  NASA APOD
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(apodData.url, '_blank')}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  View Original
-                </Button>
+                {/* Bottom right: Image Credit: NASA */}
+                <div className="text-sm text-muted-foreground">
+                  Image Credit: NASA
+                </div>
               </div>
             </div>
           </CardContent>

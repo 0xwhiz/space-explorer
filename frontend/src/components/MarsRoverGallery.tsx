@@ -149,7 +149,7 @@ export const MarsRoverGallery = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <div className="absolute top-2 right-2">
-                  <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
+                  <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-white/50">
                     <Camera className="w-3 h-3 mr-1" />
                     {photo.camera.name}
                   </Badge>
