@@ -80,3 +80,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar for Earth from Space Thumbnails */
+.earth-thumbnails-scrollbar::-webkit-scrollbar {
+  height: 10px;
+  background: transparent;
+}
+.earth-thumbnails-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, hsla(217,91%,60%,0.25), hsla(271,91%,65%,0.25));
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.3s;
+}
+.earth-thumbnails-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, hsla(217,91%,60%,0.5), hsla(271,91%,65%,0.5));
+}
+.earth-thumbnails-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsla(217,91%,60%,0.25) transparent;
+}

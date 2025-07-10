@@ -307,7 +307,7 @@ export const EarthImagery = () => {
             </CardContent>
           </Card>
           {/* Thumbnails */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 earth-thumbnails-scrollbar">
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="rounded-lg h-14 w-14" />
