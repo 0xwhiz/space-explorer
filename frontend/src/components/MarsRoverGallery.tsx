@@ -14,6 +14,41 @@ export const MarsRoverGallery = () => {
   const [selectedRover, setSelectedRover] = useState('curiosity');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedCamera, setSelectedCamera] = useState('all');
+  const [availableCameras, setAvailableCameras] = useState<{ value: string; label: string }[]>([]);
+
+  // Helper to extract unique cameras from photos
+  const extractCameras = (photos: typeof marsPhotos) => {
+    const cameraMap = new Map<string, string>();
+    photos.forEach((photo) => {
+      cameraMap.set(photo.camera.name, photo.camera.full_name);
+    });
+    return Array.from(cameraMap.entries()).map(([value, label]) => ({ value, label }));
+  };
+
+  // Fetch all photos for rover/date to get available cameras
+  React.useEffect(() => {
+    if (!selectedRover || !selectedDate) return;
+    // Fetch all cameras (no camera filter)
+    fetchMarsPhotos(selectedRover, selectedDate, undefined).then(() => {
+      // Wait for marsPhotos to update (next render)
+      setTimeout(() => {
+        setAvailableCameras(extractCameras(marsPhotos));
+      }, 0);
+    });
+    setSelectedCamera('all'); // Reset camera filter on rover/date change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRover, selectedDate]);
+
+  // Fetch filtered photos when camera changes
+  React.useEffect(() => {
+    if (!selectedRover || !selectedDate) return;
+    if (selectedCamera === 'all') {
+      fetchMarsPhotos(selectedRover, selectedDate, undefined);
+    } else {
+      fetchMarsPhotos(selectedRover, selectedDate, selectedCamera);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCamera]);
 
   const rovers = [
     { value: 'curiosity', label: 'Curiosity' },
@@ -22,21 +57,11 @@ export const MarsRoverGallery = () => {
     { value: 'perseverance', label: 'Perseverance' }
   ];
 
-  // Dynamically generate camera options from current photo results
-  const cameraSet = new Map<string, string>();
-  marsPhotos.forEach((photo) => {
-    cameraSet.set(photo.camera.name, photo.camera.full_name);
-  });
+  // Camera combobox options
   const dynamicCameraOptions = [
     { value: 'all', label: 'All Cameras' },
-    ...Array.from(cameraSet.entries()).map(([name, full_name]) => ({ value: name, label: full_name }))
+    ...availableCameras
   ];
-
-  // Fetch on mount and when rover/date changes
-  React.useEffect(() => {
-    fetchMarsPhotos(selectedRover, selectedDate, selectedCamera);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRover, selectedDate, selectedCamera]);
 
   const handleRoverChange = (rover: string) => {
     setSelectedRover(rover);
