@@ -14,41 +14,6 @@ export const MarsRoverGallery = () => {
   const [selectedRover, setSelectedRover] = useState('curiosity');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedCamera, setSelectedCamera] = useState('all');
-  const [availableCameras, setAvailableCameras] = useState<{ value: string; label: string }[]>([]);
-
-  // Helper to extract unique cameras from photos
-  const extractCameras = (photos: typeof marsPhotos) => {
-    const cameraMap = new Map<string, string>();
-    photos.forEach((photo) => {
-      cameraMap.set(photo.camera.name, photo.camera.full_name);
-    });
-    return Array.from(cameraMap.entries()).map(([value, label]) => ({ value, label }));
-  };
-
-  // Fetch all photos for rover/date to get available cameras
-  React.useEffect(() => {
-    if (!selectedRover || !selectedDate) return;
-    // Fetch all cameras (no camera filter)
-    fetchMarsPhotos(selectedRover, selectedDate, undefined).then(() => {
-      // Wait for marsPhotos to update (next render)
-      setTimeout(() => {
-        setAvailableCameras(extractCameras(marsPhotos));
-      }, 0);
-    });
-    setSelectedCamera('all'); // Reset camera filter on rover/date change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRover, selectedDate]);
-
-  // Fetch filtered photos when camera changes
-  React.useEffect(() => {
-    if (!selectedRover || !selectedDate) return;
-    if (selectedCamera === 'all') {
-      fetchMarsPhotos(selectedRover, selectedDate, undefined);
-    } else {
-      fetchMarsPhotos(selectedRover, selectedDate, selectedCamera);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCamera]);
 
   const rovers = [
     { value: 'curiosity', label: 'Curiosity' },
@@ -57,11 +22,21 @@ export const MarsRoverGallery = () => {
     { value: 'perseverance', label: 'Perseverance' }
   ];
 
-  // Camera combobox options
+  // Dynamically generate camera options from current photo results
+  const cameraSet = new Map<string, string>();
+  marsPhotos.forEach((photo) => {
+    cameraSet.set(photo.camera.name, photo.camera.full_name);
+  });
   const dynamicCameraOptions = [
     { value: 'all', label: 'All Cameras' },
-    ...availableCameras
+    ...Array.from(cameraSet.entries()).map(([name, full_name]) => ({ value: name, label: full_name }))
   ];
+
+  // Fetch on mount and when rover/date changes
+  React.useEffect(() => {
+    fetchMarsPhotos(selectedRover, selectedDate, 'all');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRover, selectedDate, selectedCamera]);
 
   const handleRoverChange = (rover: string) => {
     setSelectedRover(rover);
@@ -74,6 +49,11 @@ export const MarsRoverGallery = () => {
   const handleCameraChange = (camera: string) => {
     setSelectedCamera(camera);
   };
+
+  // Filter photos by selectedCamera (unless 'all')
+  const filteredPhotos = selectedCamera === 'all'
+    ? marsPhotos
+    : marsPhotos.filter(photo => photo.camera.name === selectedCamera);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -130,7 +110,7 @@ export const MarsRoverGallery = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-primary">
-              {marsLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : marsPhotos.length}
+              {marsLoading ? <Skeleton className="h-8 w-12 mx-auto" /> : filteredPhotos.length}
             </div>
             <div className="text-sm text-muted-foreground">Photos Found</div>
           </CardContent>
@@ -165,19 +145,19 @@ export const MarsRoverGallery = () => {
             </Card>
           ))}
         </div>
-      ) : marsPhotos.length === 0 ? (
+      ) : filteredPhotos.length === 0 ? (
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-8 text-center">
             <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Photos Found</h3>
             <p className="text-muted-foreground">
-              No photos were taken by {selectedRover.charAt(0).toUpperCase() + selectedRover.slice(1)} on {selectedDate?.toISOString().split('T')[0]}.
-              Try selecting a different date.
+              No photos were taken by {selectedRover.charAt(0).toUpperCase() + selectedRover.slice(1)} on {selectedDate?.toISOString().split('T')[0]}{selectedCamera !== 'all' ? ` with camera ${selectedCamera}` : ''}.
+              Try selecting a different date or camera.
             </p>
             <Button 
               variant="outline" 
               className="mt-4"
-              onClick={() => fetchMarsPhotos(selectedRover, selectedDate)}
+              onClick={() => fetchMarsPhotos(selectedRover, selectedDate, selectedCamera)}
             >
               Retry
             </Button>
@@ -186,7 +166,7 @@ export const MarsRoverGallery = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {marsPhotos.map((photo) => (
+          {filteredPhotos.map((photo) => (
             <Card 
               key={photo.id} 
               className="group bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden hover:shadow-cosmic transition-all duration-300 cursor-pointer"
