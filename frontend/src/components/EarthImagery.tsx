@@ -10,7 +10,7 @@ import React from 'react';
 
 export const EarthImagery = () => {
   const { epicImages, epicLoading, epicError, fetchEPICImages } = useSpaceData();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date('2023-06-01'));
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [imageType, setImageType] = useState<'natural' | 'enhanced'>('natural');
   const [selectedIdx, setSelectedIdx] = useState(0);
 

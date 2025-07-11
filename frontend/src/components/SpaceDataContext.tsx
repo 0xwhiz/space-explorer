@@ -116,7 +116,7 @@ interface SpaceDataContextType {
   marsPhotos: MarsPhoto[];
   marsLoading: boolean;
   marsError: string | null;
-  fetchMarsPhotos: (rover: string, date: Date | null) => Promise<void>;
+  fetchMarsPhotos: (rover: string, date: Date | null, camera?: string) => Promise<void>;
 
   // Near Earth Objects
   neoData: NEOApiResponse | null;
@@ -161,15 +161,17 @@ export const SpaceDataProvider = ({ children }: { children: ReactNode }) => {
   const [marsLoading, setMarsLoading] = useState(false);
   const [marsError, setMarsError] = useState<string | null>(null);
 
-  const fetchMarsPhotos = async (rover: string, date: Date | null) => {
+  const fetchMarsPhotos = async (rover: string, date: Date | null, camera?: string) => {
     setMarsLoading(true);
     setMarsError(null);
     try {
       if (!date) return;
       const dateStr = date.toISOString().split('T')[0];
-      const response = await fetch(
-        `${API_ENDPOINTS.MARS_PHOTOS}?rover=${rover}&date=${dateStr}`
-      );
+      let url = `${API_ENDPOINTS.MARS_PHOTOS}?rover=${rover}&date=${dateStr}`;
+      if (camera && camera !== 'all') {
+        url += `&camera=${camera}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch Mars rover photos');
       const data: MarsApiResponse = await response.json();
       setMarsPhotos(data.photos);

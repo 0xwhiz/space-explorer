@@ -12,7 +12,8 @@ import React from 'react';
 export const MarsRoverGallery = () => {
   const { marsPhotos, marsLoading, marsError, fetchMarsPhotos } = useSpaceData();
   const [selectedRover, setSelectedRover] = useState('curiosity');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date('2023-01-01'));
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedCamera, setSelectedCamera] = useState('all');
 
   const rovers = [
     { value: 'curiosity', label: 'Curiosity' },
@@ -21,11 +22,58 @@ export const MarsRoverGallery = () => {
     { value: 'perseverance', label: 'Perseverance' }
   ];
 
+  const cameraOptions: Record<string, { value: string; label: string }[]> = {
+    curiosity: [
+      { value: 'all', label: 'All Cameras' },
+      { value: 'FHAZ', label: 'Front Hazard Avoidance Camera' },
+      { value: 'RHAZ', label: 'Rear Hazard Avoidance Camera' },
+      { value: 'MAST', label: 'Mast Camera' },
+      { value: 'CHEMCAM', label: 'Chemistry and Camera Complex' },
+      { value: 'MAHLI', label: 'Mars Hand Lens Imager' },
+      { value: 'MARDI', label: 'Mars Descent Imager' },
+      { value: 'NAVCAM', label: 'Navigation Camera' },
+    ],
+    opportunity: [
+      { value: 'all', label: 'All Cameras' },
+      { value: 'FHAZ', label: 'Front Hazard Avoidance Camera' },
+      { value: 'RHAZ', label: 'Rear Hazard Avoidance Camera' },
+      { value: 'NAVCAM', label: 'Navigation Camera' },
+      { value: 'PANCAM', label: 'Panoramic Camera' },
+      { value: 'MINITES', label: 'Miniature Thermal Emission Spectrometer (Mini-TES)' },
+    ],
+    spirit: [
+      { value: 'all', label: 'All Cameras' },
+      { value: 'FHAZ', label: 'Front Hazard Avoidance Camera' },
+      { value: 'RHAZ', label: 'Rear Hazard Avoidance Camera' },
+      { value: 'NAVCAM', label: 'Navigation Camera' },
+      { value: 'PANCAM', label: 'Panoramic Camera' },
+      { value: 'MINITES', label: 'Miniature Thermal Emission Spectrometer (Mini-TES)' },
+    ],
+    perseverance: [
+      { value: 'all', label: 'All Cameras' },
+      { value: 'EDL_RUCAM', label: 'Rover Up-Look Camera' },
+      { value: 'EDL_RDCAM', label: 'Rover Down-Look Camera' },
+      { value: 'EDL_DDCAM', label: 'Descent Stage Down-Look Camera' },
+      { value: 'EDL_PUCAM1', label: 'Parachute Up-Look Camera A' },
+      { value: 'EDL_PUCAM2', label: 'Parachute Up-Look Camera B' },
+      { value: 'NAVCAM_LEFT', label: 'Navigation Camera - Left' },
+      { value: 'NAVCAM_RIGHT', label: 'Navigation Camera - Right' },
+      { value: 'MCZ_RIGHT', label: 'Mastcam-Z Right' },
+      { value: 'MCZ_LEFT', label: 'Mastcam-Z Left' },
+      { value: 'FRONT_HAZCAM_LEFT_A', label: 'Front Hazard Avoidance Camera - Left' },
+      { value: 'FRONT_HAZCAM_RIGHT_A', label: 'Front Hazard Avoidance Camera - Right' },
+      { value: 'REAR_HAZCAM_LEFT', label: 'Rear Hazard Avoidance Camera - Left' },
+      { value: 'REAR_HAZCAM_RIGHT', label: 'Rear Hazard Avoidance Camera - Right' },
+      { value: 'SKYCAM', label: 'SkyCam' },
+      { value: 'SHERLOC_WATSON', label: 'SHERLOC WATSON Camera' },
+    ],
+  };
+
   // Fetch on mount and when rover/date changes
   React.useEffect(() => {
-    fetchMarsPhotos(selectedRover, selectedDate);
+    fetchMarsPhotos(selectedRover, selectedDate, selectedCamera);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRover, selectedDate]);
+  }, [selectedRover, selectedDate, selectedCamera]);
 
   const handleRoverChange = (rover: string) => {
     setSelectedRover(rover);
@@ -33,6 +81,10 @@ export const MarsRoverGallery = () => {
 
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
+  };
+
+  const handleCameraChange = (camera: string) => {
+    setSelectedCamera(camera);
   };
 
   return (
@@ -58,6 +110,18 @@ export const MarsRoverGallery = () => {
                   {rovers.map((rover) => (
                     <SelectItem key={rover.value} value={rover.value}>
                       {rover.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedCamera} onValueChange={handleCameraChange}>
+                <SelectTrigger className="w-full sm:w-52">
+                  <SelectValue placeholder="Camera type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cameraOptions[selectedRover].map((camera) => (
+                    <SelectItem key={camera.value} value={camera.value}>
+                      {camera.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -94,7 +158,7 @@ export const MarsRoverGallery = () => {
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold font-orbitron text-accent">
-              {marsLoading ? <Skeleton className="h-8 w-8 mx-auto" /> : new Set(marsPhotos.map(p => p.camera.name)).size}
+              {marsLoading ? <Skeleton className="h-8 w-8 mx-auto" /> : cameraOptions[selectedRover].length - 1}
             </div>
             <div className="text-sm text-muted-foreground">Camera Types</div>
           </CardContent>
